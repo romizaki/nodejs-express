@@ -1,11 +1,13 @@
 const UserRepository = require("../repositories");
 const User = require("../models/user");
+const JwtRepository = require("../repositories/jwt.repository");
+const { redisClient } = require("../database")
 
 class UserController {
   static async getAllUsers(req, res) {
     try {
       const users = await UserRepository.getAllUsers();
-      console.log(users);
+      // await redisClient.save('all_user', users)
       return res.status(200).json({
         status: "ok",
         result: users,
@@ -53,7 +55,7 @@ class UserController {
   static async deleteUser(req, res) {
     try {
       const userId = req.params.user_id;
-      const deletedUser = await UserRepository.deleteUser(userId)
+      const deletedUser = await UserRepository.deleteUser(userId);
 
       if (!deletedUser) {
         return res.status(404).json({
@@ -94,7 +96,6 @@ class UserController {
         result: updatedUser,
       });
     } catch (error) {
-      console.log(JSON.stringify(error));
       return res.status(500).json({
         status: "error",
         message: "Failed to update user",
@@ -102,38 +103,19 @@ class UserController {
     }
   }
 
-  static async updateUserName(req, res) {
-    try {
-      const userId = req.params.id;
-      const newUserName = req.body.userName;
-
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { userName: newUserName },
-        {
-          new: true, // Return the updated user document
-          runValidators: true, // Run model validators on update
-        }
-      );
-
-      if (!updatedUser) {
-        return res.status(404).json({
-          status: "error",
-          message: "User not found",
-        });
-      }
-
-      return res.status(200).json({
-        status: "ok",
-        result: updatedUser,
-      });
-    } catch (error) {
-      console.error("Error updating user name:", error);
-      return res.status(500).json({
+  static async generateToken(req, res) {
+    const { accountNumber } = req.body;
+    if (!accountNumber) 
+      return res.status(400).json({
         status: "error",
-        message: "Failed to update user name",
+        message: "accountNumber should not be empty",
       });
-    }
+    const payload = { accountNumber: accountNumber };
+    const data = await JwtRepository.generateToken(payload)
+    return res.status(200).json({
+      status: 'ok',
+      result: data
+    })
   }
 }
 
