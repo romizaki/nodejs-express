@@ -14,4 +14,6 @@ connectToDatabase()
     });
   });
 
+app.use(express.json());
+
 app.use(routes);
