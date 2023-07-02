@@ -1,17 +1,5 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const redis = require('redis');
-
-// Create a Redis client and establish a connection
-const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-});
-
-// Handle Redis connection errors
-redisClient.on('error', (error) => {
-  console.error('Error connecting to Redis:', error);
-});
 
 async function connectToDatabase() {
   try {
@@ -33,5 +21,4 @@ async function connectToDatabase() {
 module.exports = {
   connectToDatabase,
   connection: mongoose.connection,
-  redisClient: redisClient, // Export the Redis client
 };

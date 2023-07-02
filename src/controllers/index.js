@@ -1,16 +1,22 @@
 const UserRepository = require("../repositories");
 const User = require("../models/user");
 const JwtRepository = require("../repositories/jwt.repository");
-const { redisClient } = require("../database")
+const redis = require("../helper")
 
 class UserController {
   static async getAllUsers(req, res) {
     try {
-      const users = await UserRepository.getAllUsers();
-      // await redisClient.save('all_user', users)
+      let data = null 
+      data = await redis.getRedisData("users_data");
+      
+      if (!data || data.length === 0) {
+        data = await UserRepository.getAllUsers();
+        await redis.setRedisData("users_data", data, 60);
+      } 
+      
       return res.status(200).json({
         status: "ok",
-        result: users,
+        result: data,
       });
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -20,6 +26,7 @@ class UserController {
       });
     }
   }
+  
 
   static async createUser(req, res) {
     try {
@@ -39,6 +46,7 @@ class UserController {
       }
       const savedUser = await UserRepository.createUser(newUser);
 
+      await redis.deleteRedisData("users_data")
       return res.status(201).json({
         status: "ok",
         result: savedUser,
@@ -64,6 +72,7 @@ class UserController {
         });
       }
 
+      await redis.deleteRedisData("users_data")
       return res.status(200).json({
         status: "ok",
         result: deletedUser,
@@ -90,7 +99,7 @@ class UserController {
           message: "User not found",
         });
       }
-
+      await redis.deleteRedisData("users_data")
       return res.status(200).json({
         status: "ok",
         result: updatedUser,

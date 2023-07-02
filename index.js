@@ -1,19 +1,16 @@
-const routes = require("./src/routes");
-const express = require("express");
-const { connectToDatabase } = require("./src/database");
-const { errorHandler } = require("./src/handler");
-const app = express();
-const port = 3000;
+const express = require('express');
 
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+const startServer = async () => {
+  const app = express();
 
-connectToDatabase().then(() => {
-  app.listen(port, () => {
-    console.log(`Server is running on ${port}`);
+  await require('./src/loaders')(app);
+
+  app.listen(process.env.PORT, err => {
+    if (err) {
+      process.exit(1);
+    }
+    console.log("Port opened at " + process.env.PORT);
   });
-});
+}
 
-
-app.use(routes);
-app.use(errorHandler);
+startServer();
